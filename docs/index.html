@@ -1,0 +1,388 @@
+docs/index.html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Monitor - Мониторинг цен конкурентов</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { 
+            text-align: center; 
+            color: white; 
+            margin-bottom: 10px;
+            font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 20px;
+            font-size: 1em;
+        }
+        .verified-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .tab:hover { background: rgba(255,255,255,0.3); }
+        .tab.active { 
+            background: white; 
+            color: #667eea;
+            border-color: white;
+        }
+        .brand-section { display: none; }
+        .brand-section.active { display: block; }
+        .alert-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            color: #856404;
+        }
+        .alert-box h3 { margin-bottom: 10px; }
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px 22px;
+            font-weight: 600;
+            font-size: 1.2em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status-badge {
+            font-size: 0.7em;
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.2);
+        }
+        .status-active { background: #10b981; }
+        .status-partial { background: #f59e0b; }
+        .status-not-found { background: #6b7280; }
+        .status-unavailable { background: #ef4444; }
+        .card-body { padding: 0; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { 
+            padding: 14px 18px; 
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th { 
+            background: #f8f9fa; 
+            font-weight: 600;
+            color: #555;
+            font-size: 13px;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: #f8f9fa; }
+        .price { font-weight: 700; font-size: 1.1em; }
+        .price a {
+            color: #10b981;
+            text-decoration: none;
+            padding: 6px 12px;
+            background: #d1fae5;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .price a:hover { background: #10b981; color: white; }
+        .out-of-stock {
+            color: #ef4444;
+            text-decoration: line-through;
+            background: #fee2e2;
+            padding: 6px 12px;
+            border-radius: 8px;
+        }
+        .product-name { font-weight: 500; color: #333; }
+        .empty-message {
+            padding: 40px;
+            text-align: center;
+            color: #6b7280;
+        }
+        .empty-message .icon { font-size: 3em; margin-bottom: 15px; }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: rgba(255,255,255,0.8);
+            font-size: 13px;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-size: 0.85em;
+        }
+        .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-stock { background: #10b981; }
+        .dot-no-stock { background: #ef4444; }
+        .price-note { font-size: 0.75em; color: #6b7280; padding: 10px 18px; background: #f8f9fa; }
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+            h1 { font-size: 1.6em; }
+            .tabs { gap: 8px; }
+            .tab { padding: 10px 16px; font-size: 0.9em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Price Monitor <span class="verified-badge">VERIFIED</span></h1>
+        <p class="subtitle">Мониторинг цен конкурентов | Данные верифицированы вручную 05.02.2026</p>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-dot dot-stock"></div>
+                <span>В наличии (кликните на цену)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot dot-no-stock"></div>
+                <span>Нет в наличии</span>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="showBrand('Jalupro')">Jalupro</div>
+            <div class="tab" onclick="showBrand('DSD')">DSD de Luxe</div>
+            <div class="tab" onclick="showBrand('Hydropeptide')">Hydropeptide</div>
+            <div class="tab" onclick="showBrand('MDceuticals')">MD:ceuticals</div>
+        </div>
+        
+        <!-- ===== JALUPRO ===== -->
+        <div id="brand-Jalupro" class="brand-section active">
+            <div class="grid">
+                
+                <!-- MorySkin - VERIFIED -->
+                <div class="card">
+                    <div class="card-header">
+                        MorySkin
+                        <span class="status-badge status-active">5 товаров</span>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead><tr><th>Товар</th><th>Цена</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td class="product-name">Jalupro Super Hydro 1x2,5ml</td>
+                                    <td class="price"><span class="out-of-stock">€79.00</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="product-name">Jalupro Classic 2x Ampullen & 2x Flaschen</td>
+                                    <td class="price"><a href="https://moryskin.com/produkt/jalupro-2-x-ampullen-2-x-flaschen/" target="_blank">€71.50</a></td>
+                                </tr>
+                                <tr>
+                                    <td class="product-name">Jalupro HMW Biorevitalizer</td>
+                                    <td class="price"><a href="https://moryskin.com/produkt/jalupro-hmw-biorevitalizer/" target="_blank">€71.50</a></td>
+                                </tr>
+                                <tr>
+                                    <td class="product-name">Jalupro Young Eye 1x1ml</td>
+                                    <td class="price"><a href="https://moryskin.com/produkt/jalupro-young-eye-1-x-1-ml/" target="_blank">€85.90</a></td>
+                                </tr>
+                                <tr>
+                                    <td class="product-name">Jalupro Gesichtsmasken (11 шт.)</td>
+                                    <td class="price"><a href="https://moryskin.com/produkt/jalupro-gesichtsmasken/" target="_blank">€69.00</a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="price-note">* Цены включают НДС (inkl. MwSt.)</div>
+                    </div>
+                </div>
+                
+                <!-- Hyaloo - VERIFIED -->
+                <div class="card">
+                    <div class="card-header">
+                        Hyaloo
+                        <span class="status-badge status-partial">2 в наличии</span>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead><tr><th>Товар</th><th>Цена</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td class="product-name">Jalupro HMW</td>
+                                    <td class="price"><span class="out-of-stock">€55.99</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="product-name">Jalupro Amino Acid</td>
+                                    <td class="price"><a href="https://hyaloo.de/de_DE/searchquery/Jalupro/1/phot/5?url=Jalupro" target="_blank">€72.99</a></td>
+                                </tr>
+                                <tr>
+                                    <td class="product-name">Jalupro SuperHydro 1x2,5ml</td>
+                                    <td class="price"><span class="out-of-stock">€73.99</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="product-name">Jalupro Young EYE 1x1ml</td>
+                                    <td class="price"><a href="https://hyaloo.de/de_DE/p/Jalupro-Young-EYE-1x1ml/3143" target="_blank">€79.89</a></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="price-note">* Цены включают НДС (inkl. 19% MwSt.)</div>
+                    </div>
+                </div>
+                
+                <!-- AUDERMAESTHETIC - VERIFIED -->
+                <div class="card">
+                    <div class="card-header">
+                        AUDERMAESTHETIC
+                        <span class="status-badge status-partial">1 в наличии</span>
+                    </div>
+                    <div class="card-body">
+                        <table>
+                            <thead><tr><th>Товар</th><th>Цена</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td class="product-name">JALUPRO Super Hydro 1x2,5ml</td>
+                                    <td class="price"><span class="out-of-stock">€77.34</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="product-name">Jalupro Classic 2x Ampullen & 2x Flaschen</td>
+                                    <td class="price"><a href="https://www.auderm.de/products/jalupro-2-x-ampullen-a-100mg-2-x-flaschen-a-30mg" target="_blank">€71.39</a></td>
+                                </tr>
+                                <tr>
+                                    <td class="product-name">Jalupro HMW 1x1,5ml & 1x1ml</td>
+                                    <td class="price"><span class="out-of-stock">€71.39</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="price-note">* Цены БЕЗ НДС (exkl. MwSt.) - B2B</div>
+                    </div>
+                </div>
+                
+                <!-- Jollifill - VERIFIED: NO PRODUCTS -->
+                <div class="card">
+                    <div class="card-header">
+                        Jollifill
+                        <span class="status-badge status-not-found">Нет товаров</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="empty-message">
+                            <div class="icon">❌</div>
+                            <p><strong>Товары Jalupro не найдены</strong></p>
+                            <p style="margin-top:10px;font-size:0.9em;">Сайт требует подтверждения статуса клиента.<br>В категории Mesotherapie (91 товар) Jalupro отсутствует.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- hyamarkt - VERIFIED: NO PRODUCTS -->
+                <div class="card">
+                    <div class="card-header">
+                        hyamarkt
+                        <span class="status-badge status-not-found">Нет товаров</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="empty-message">
+                            <div class="icon">❌</div>
+                            <p><strong>Товары Jalupro не найдены</strong></p>
+                            <p style="margin-top:10px;font-size:0.9em;">Поиск по "Jalupro" не дает результатов.<br>Фильтр по марке не работает.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FARMA MEDICAL - UNAVAILABLE -->
+                <div class="card">
+                    <div class="card-header">
+                        FARMA MEDICAL
+                        <span class="status-badge status-unavailable">Недоступен</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="empty-message">
+                            <div class="icon">⚠️</div>
+                            <p><strong>Сайт недоступен</strong></p>
+                            <p style="margin-top:10px;font-size:0.9em;">Невозможно получить данные</p>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        
+        <!-- ===== DSD de Luxe ===== -->
+        <div id="brand-DSD" class="brand-section">
+            <div class="alert-box">
+                <h3>⚠️ Бренд не найден на сайтах конкурентов</h3>
+                <p>Бренд <strong>DSD de Luxe</strong> не представлен ни на одном из указанных сайтов. Это специализированные магазины дермальных филлеров и мезотерапии, которые не продают данный бренд.</p>
+                <p style="margin-top:10px;"><strong>Рекомендация:</strong> Проверьте официальных дистрибьюторов или специализированные магазины косметики.</p>
+            </div>
+        </div>
+        
+        <!-- ===== Hydropeptide ===== -->
+        <div id="brand-Hydropeptide" class="brand-section">
+            <div class="alert-box">
+                <h3>⚠️ Бренд не найден на сайтах конкурентов</h3>
+                <p>Бренд <strong>Hydropeptide</strong> не представлен ни на одном из указанных сайтов. Это специализированные магазины дермальных филлеров и мезотерапии, которые не продают данный бренд.</p>
+                <p style="margin-top:10px;"><strong>Рекомендация:</strong> Проверьте официальных дистрибьюторов или специализированные магазины косметики.</p>
+            </div>
+        </div>
+        
+        <!-- ===== MD:ceuticals ===== -->
+        <div id="brand-MDceuticals" class="brand-section">
+            <div class="alert-box">
+                <h3>⚠️ Бренд не найден на сайтах конкурентов</h3>
+                <p>Бренд <strong>MD:ceuticals</strong> не представлен ни на одном из указанных сайтов. Это специализированные магазины дермальных филлеров и мезотерапии, которые не продают данный бренд.</p>
+                <p style="margin-top:10px;"><strong>Рекомендация:</strong> Проверьте официальных дистрибьюторов или специализированные магазины косметики.</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Все данные верифицированы вручную | Последнее обновление: 05.02.2026 15:24 UTC</p>
+            <p>Кликните на цену для перехода на страницу товара</p>
+        </div>
+    </div>
+    
+    <script>
+        function showBrand(brand) {
+            document.querySelectorAll('.brand-section').forEach(s => s.classList.remove('active'));
+            document.getElementById('brand-' + brand).classList.add('active');
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
